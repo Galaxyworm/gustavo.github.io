@@ -1,0 +1,147 @@
+---
+title: "Case_Study_bellabeat"
+author: "Gustavo Venceslau"
+date: "2023-11-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+```
+
+## BELLABEAT use for nutrition plans follow up
+
+This study aims to answer the following questions:
+
+Are users inputting weight data in the app?
+
+How often are they collecting weight data?
+
+Are users using the app as a supportive tool for their nutrition plan or diet?
+
+For this study the weightLogInfo_merged dataframes were used.
+
+
+
+```{r echo=FALSE}
+###                    Importing and preparing Weight data
+##      Weight data from eight of the thirty three app users 
+weightLogInfo_merged <- read_csv("C:/Users/gusta/OneDrive/Documentos/Week 8 - Case Study/Fitabase Data 4.12.16-5.12.16/weightLogInfo_merged.csv")
+# Separate Date into Date and time
+weightLogInfo_merged <- separate(weightLogInfo_merged, Date, into = c('Date', 'Time'), sep = ' ')
+
+
+## Counting the number of distinct participants
+# Count the number of distinct values in the Id column
+distinct_count <- weightLogInfo_merged %>%
+  summarise(distinct_count = n_distinct(Id))
+
+
+##      Preparing the data to plot by participant.
+# Function to label distinctively each element of a column.
+label_distinctively <- function(column) {
+  #Convert the column to a factor with unique labels
+  factor(column, labels = seq_along(unique(column)))
+}
+# Apply the function to the Id column
+weightLogInfo_merged$DistinctLabel <- label_distinctively(weightLogInfo_merged$Id)
+
+
+```
+
+
+
+## The available Weight data
+
+The graph shows the number of the app users that have input weight data during the period of observation (from 04/12/206 to 05/12/2006). 
+
+
+It seems that users are not using the app for weight control. 
+
+
+The total weight data available comes from eight out of thirty three users.
+
+```{r echo=FALSE}
+
+ggplot(data=weightLogInfo_merged, aes(x=DistinctLabel, y=WeightKg, color = IsManualReport))+
+    geom_jitter(width = 0.2)+
+  labs(x = "App Users", y = "Weight (Kg)")+
+  theme(axis.text.x = element_text(angle = 0), legend.position = "bottom")
+
+```
+
+## Detailing user Weight data over time
+
+Few users are consistently inputting weight data over time. Two users have consistently input weight data in the period.
+
+```{r echo=FALSE}
+
+p <-ggplot(data=weightLogInfo_merged, aes(x=Date, y=WeightKg, color = IsManualReport))+
+  #geom_point()+
+  theme(axis.text.x = element_blank(), legend.position = "bottom")+ 
+  geom_jitter(width = 0.2)+
+  labs(x = "Date", y = "Weight (Kg)")
+## Graph time vs. calories
+
+p + facet_wrap(vars(Id), nrow = 4)
+```
+
+
+## Facet Ploting Weight data
+
+
+Looking at the data of the two users that consistently collected weight data, it is possible to see that they are working on losing weight. 
+
+This indicate that they are following a nutritional plan or a diet.
+
+``` {r echo=FALSE}
+
+# Filtering data by specific values then plot
+
+df <- weightLogInfo_merged
+
+#Values to match in the 'Id' column
+values_to_mach <- c("6962181067", "8877689391")
+
+# Filter rows that match the specified values
+matching_rows <- df[df$Id %in% values_to_mach, ]
+#view(matching_rows)
+
+# Plot the matching rows
+
+
+ggplot(data = matching_rows, aes(x = Date, y = WeightKg, group = DistinctLabel, color = DistinctLabel))+
+  geom_line()+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, col = "green")+
+  theme(axis.text.x = element_text(angle = 90, size = 0.5), legend.position = "bottom")+ 
+  labs(y = "Weight (Kg)")+
+  facet_wrap(vars(Id), scales = "free_y", nrow = 2, strip.position = "top") 
+
+ggplot(data = matching_rows, aes(x = DistinctLabel, y = WeightKg))+
+  geom_boxplot(aes(colour = DistinctLabel))+
+    labs(x = "Users", y = "Weight (kg)", color = "User")+ 
+  theme(legend.position = "none")+
+  facet_wrap(vars(Id), scales = "free_y", nrow = 1, strip.position = "top") 
+
+
+
+```
+
+
+
+
+
+
+From the previous data and graphs, it is possible to conclude that Bellabeat can expand its use as a weight control tool.
+
+
+One can think of a slogan: "Bellabeat is your best weight confidence friend!"
+
+
+
+:)
